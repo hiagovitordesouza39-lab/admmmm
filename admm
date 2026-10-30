@@ -1,0 +1,205 @@
+
+-- DONO ADMIN
+-- Painel local para Roblox
+-- Compatível com executores que suportam LuaU
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local senha = "244466666"
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "DonoAdmin"
+gui.ResetOnSpawn = false
+gui.Parent = game:GetService("CoreGui")
+
+local function criar(class, props, parent)
+    local obj = Instance.new(class)
+    for k, v in pairs(props) do
+        obj[k] = v
+    end
+    obj.Parent = parent
+    return obj
+end
+
+local frame = criar("Frame", {
+    Size = UDim2.fromOffset(300, 190),
+    Position = UDim2.new(0.5, -150, 0.5, -95),
+    BackgroundColor3 = Color3.fromRGB(20, 20, 30),
+}, gui)
+
+criar("UICorner", {CornerRadius = UDim.new(0, 12)}, frame)
+
+criar("TextLabel", {
+    Size = UDim2.new(1, 0, 0, 45),
+    BackgroundTransparency = 1,
+    Text = "DONO ADMIN LOGIN",
+    TextColor3 = Color3.fromRGB(0, 220, 255),
+    TextSize = 20,
+    Font = Enum.Font.GothamBold,
+}, frame)
+
+local caixa = criar("TextBox", {
+    Size = UDim2.new(0.8, 0, 0, 40),
+    Position = UDim2.new(0.1, 0, 0, 65),
+    BackgroundColor3 = Color3.fromRGB(40, 40, 55),
+    PlaceholderText = "Digite a senha",
+    Text = "",
+    TextColor3 = Color3.new(1, 1, 1),
+    TextSize = 16,
+}, frame)
+
+local entrar = criar("TextButton", {
+    Size = UDim2.new(0.8, 0, 0, 38),
+    Position = UDim2.new(0.1, 0, 0, 120),
+    BackgroundColor3 = Color3.fromRGB(0, 130, 180),
+    Text = "ENTRAR",
+    TextColor3 = Color3.new(1, 1, 1),
+    TextSize = 16,
+    Font = Enum.Font.GothamBold,
+}, frame)
+
+criar("UICorner", {CornerRadius = UDim.new(0, 8)}, caixa)
+criar("UICorner", {CornerRadius = UDim.new(0, 8)}, entrar)
+
+entrar.MouseButton1Click:Connect(function()
+    if caixa.Text ~= senha then
+        caixa.Text = ""
+        caixa.PlaceholderText = "Senha incorreta!"
+        return
+    end
+
+    frame:Destroy()
+
+    local painel = criar("Frame", {
+        Size = UDim2.fromOffset(280, 310),
+        Position = UDim2.new(0, 30, 0.3, 0),
+        BackgroundColor3 = Color3.fromRGB(20, 20, 30),
+    }, gui)
+
+    criar("UICorner", {CornerRadius = UDim.new(0, 12)}, painel)
+
+    criar("TextLabel", {
+        Size = UDim2.new(1, 0, 0, 45),
+        BackgroundTransparency = 1,
+        Text = "DONO ADMIN",
+        TextColor3 = Color3.fromRGB(0, 220, 255),
+        TextSize = 20,
+        Font = Enum.Font.GothamBold,
+    }, painel)
+
+    local humanoid
+
+    local function atualizar()
+        local char = player.Character
+        humanoid = char and char:FindFirstChildOfClass("Humanoid")
+    end
+
+    player.CharacterAdded:Connect(function()
+        task.wait(1)
+        atualizar()
+    end)
+
+    atualizar()
+
+    local function botao(nome, y, func)
+        local b = criar("TextButton", {
+            Size = UDim2.new(0.85, 0, 0, 38),
+            Position = UDim2.new(0.075, 0, 0, y),
+            BackgroundColor3 = Color3.fromRGB(40, 55, 75),
+            Text = nome,
+            TextColor3 = Color3.new(1, 1, 1),
+            TextSize = 15,
+            Font = Enum.Font.GothamBold,
+        }, painel)
+
+        criar("UICorner", {CornerRadius = UDim.new(0, 7)}, b)
+        b.MouseButton1Click:Connect(func)
+        return b
+    end
+
+    local velocidade = false
+    botao("SPEED ON / OFF", 55, function()
+        atualizar()
+        if humanoid then
+            velocidade = not velocidade
+            humanoid.WalkSpeed = velocidade and 50 or 16
+        end
+    end)
+
+    local pulo = false
+    botao("SUPER JUMP ON / OFF", 100, function()
+        atualizar()
+        if humanoid then
+            pulo = not pulo
+            humanoid.UseJumpPower = true
+            humanoid.JumpPower = pulo and 100 or 50
+        end
+    end)
+
+    local voo = false
+    local bv, bg, connection
+
+    botao("FLY ON / OFF", 145, function()
+        atualizar()
+        local char = player.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+
+        voo = not voo
+
+        if voo then
+            bv = Instance.new("BodyVelocity")
+            bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+            bv.Velocity = Vector3.zero
+            bv.Parent = root
+
+            bg = Instance.new("BodyGyro")
+            bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
+            bg.Parent = root
+
+            connection = RunService.RenderStepped:Connect(function()
+                if not voo then return end
+                local camera = workspace.CurrentCamera
+                local direction = Vector3.zero
+
+                if UIS:IsKeyDown(Enum.KeyCode.W) then
+                    direction += camera.CFrame.LookVector
+                end
+                if UIS:IsKeyDown(Enum.KeyCode.S) then
+                    direction -= camera.CFrame.LookVector
+                end
+                if UIS:IsKeyDown(Enum.KeyCode.A) then
+                    direction -= camera.CFrame.RightVector
+                end
+                if UIS:IsKeyDown(Enum.KeyCode.D) then
+                    direction += camera.CFrame.RightVector
+                end
+                if UIS:IsKeyDown(Enum.KeyCode.Space) then
+                    direction += Vector3.yAxis
+                end
+                if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
+                    direction -= Vector3.yAxis
+                end
+
+                bv.Velocity = direction.Magnitude > 0
+                    and direction.Unit * 50 or Vector3.zero
+                bg.CFrame = camera.CFrame
+            end)
+        else
+            if connection then connection:Disconnect() end
+            if bv then bv:Destroy() end
+            if bg then bg:Destroy() end
+        end
+    end)
+
+    botao("FECHAR PAINEL", 190, function()
+        voo = false
+        if connection then connection:Disconnect() end
+        if bv then bv:Destroy() end
+        if bg then bg:Destroy() end
+        gui:Destroy()
+    end)
+end)
